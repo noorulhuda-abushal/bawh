@@ -317,7 +317,6 @@
     "Saved ✓": "انحفظت ✓",
     "Reported ✓": "تم البلاغ ✓",
     "From a book? (optional)": "من أي كتاب؟ (اختياري)",
-    "Book title, e.g. The Prophet": "اسم الكتاب، مثلاً: النبي",
     "Book title": "اسم الكتاب",
     "Author": "الكاتب",
     "Author (optional, the AI can find it)": "الكاتب (اختياري)",
@@ -402,5 +401,6 @@
     "Skip": "تخطي",
     "Start": "يلا نبدأ",
     "Finish": "إنهاء",
-    ":n of :total": ":n من :total"
+    ":n of :total": ":n من :total",
+    "Book title, e.g. Little Women": "اسم الكتاب، مثلاً: طوق الحمامة"
 }

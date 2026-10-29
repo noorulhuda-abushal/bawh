@@ -7,7 +7,7 @@
     <div class="mt-3 grid gap-2 sm:grid-cols-2">
         <input type="text" name="book_title" maxlength="150" class="input" data-book-title
             value="{{ old('book_title', $book?->title) }}"
-            placeholder="{{ __('Book title, e.g. The Prophet') }}" aria-label="{{ __('Book title') }}">
+            placeholder="{{ __('Book title, e.g. Little Women') }}" aria-label="{{ __('Book title') }}">
         <input type="text" name="book_author" maxlength="100" class="input" data-book-author
             value="{{ old('book_author', $book?->author) }}"
             placeholder="{{ __('Author (optional, the AI can find it)') }}" aria-label="{{ __('Author') }}">
