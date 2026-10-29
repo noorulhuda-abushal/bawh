@@ -17,7 +17,7 @@ class Book extends Model
 
     protected function casts(): array
     {
-        return ['verified' => 'boolean'];
+        return ['verified' => 'boolean', 'read_checked_at' => 'datetime'];
     }
 
     // The quotes taken from this book

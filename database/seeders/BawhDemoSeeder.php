@@ -100,18 +100,21 @@ class BawhDemoSeeder extends Seeder
         ["I'm not afraid of storms, for I'm learning how to sail my ship.", 'hope', 'Little Women', 'Louisa May Alcott'],
         ['I declare after all there is no enjoyment like reading!', 'relief', 'Pride and Prejudice', 'Jane Austen'],
         ["Isn't it nice to think that tomorrow is a new day with no mistakes in it yet?", 'relief', 'Anne of Green Gables', 'L. M. Montgomery'],
+        ['دع الأيام تفعل ما تشاء، وطب نفساً إذا حكم القضاء', 'relief', 'ديوان الإمام الشافعي', 'الإمام الشافعي'],
+        ['إذا الشعب يوماً أراد الحياة، فلا بد أن يستجيب القدر', 'hope', 'أغاني الحياة', 'أبو القاسم الشابي'],
+        ['أعطني الناي وغنِّ، فالغنا سرُّ الوجود', 'relief', 'المواكب', 'جبران خليل جبران'],
+        ['الحب أعزك الله أوله هزل وآخره جد', 'love', 'طوق الحمامة', 'ابن حزم الأندلسي'],
+        ['أمرّ على الديار ديار ليلى، أقبّل ذا الجدار وذا الجدارا', 'nostalgia', 'ديوان مجنون ليلى', 'قيس بن الملوح'],
+        ['لا يحمل الحقد من تعلو به الرتب، ولا ينال العلا من طبعه الغضب', 'hope', 'ديوان عنترة بن شداد', 'عنترة بن شداد'],
+        ['على هذه الأرض ما يستحق الحياة', 'hope', 'ورد أقل', 'محمود درويش'],
     ];
 
     public function run(): void
     {
         if (User::where('email', self::USERS[0][1])->exists()) {
-            // The users are already there: only add the books if they're missing
-            if (Book::doesntExist()) {
-                $this->addBooks(User::whereIn('email', array_column(self::USERS, 1))->get());
-                $this->command?->info('📚 Books added to the library!');
-            } else {
-                $this->command?->warn('The demo data is already there ✓');
-            }
+            // The users are already there: only add the book quotes that are missing
+            $added = $this->addBooks(User::whereIn('email', array_column(self::USERS, 1))->get());
+            $this->command?->info($added ? "📚 {$added} book quotes added to the library!" : 'The demo data is already there ✓');
 
             return;
         }
@@ -181,9 +184,16 @@ class BawhDemoSeeder extends Seeder
     }
 
     // 📚 Adds the book quotes, each linked to its (verified) book in the library
-    private function addBooks($users): void
+    private function addBooks($users): int
     {
+        $added = 0;
         foreach (self::BOOK_QUOTES as $i => [$text, $mood, $title, $author]) {
+            // already added before? skip it
+            if (Quote::where('content', $text)->exists()) {
+                continue;
+            }
+            $added++;
+
             $book = Book::firstOrCreate(
                 ['slug' => Book::makeSlug($title, $author)],
                 ['title' => $title, 'author' => $author, 'verified' => true]
@@ -194,8 +204,10 @@ class BawhDemoSeeder extends Seeder
                 'mood' => $mood,
                 'book_id' => $book->id,
             ]);
-            $quote->created_at = now()->subDays(12 - $i * 2)->setTime(21, 10 + $i);
+            $quote->created_at = now()->subDays(26 - $i * 2)->setTime(21, 10 + $i);
             $quote->save();
         }
+
+        return $added;
     }
 }

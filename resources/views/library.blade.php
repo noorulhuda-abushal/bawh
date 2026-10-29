@@ -47,6 +47,27 @@
                 </form>
             </div>
 
+            {{-- ✨ Found by the AI: the book is real but nobody quoted it yet --}}
+            @if ($found)
+                <div class="found-book reveal">
+                    <a href="{{ route('book', $found) }}" class="book-cover small" style="--cover: {{ $found->coverColor() }}">
+                        <span class="book-title" dir="auto">{{ $found->title }}</span>
+                        @if ($found->author)<span class="book-author" dir="auto">{{ $found->author }}</span>@endif
+                    </a>
+                    <div class="flex-1">
+                        <span class="ai-tag">✨ {{ __('Found by AI') }}</span>
+                        <p class="mt-2 text-lg font-bold">{{ $found->title }}@if ($found->author) — {{ $found->author }}@endif</p>
+                        <p class="mt-1 text-sm opacity-80">{{ __('It\'s not on our shelf yet because nobody quoted it. Be the first!') }}</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <a href="{{ route('book', $found) }}" class="btn-ghost">📖 {{ __('Open the book') }}</a>
+                            @auth
+                                <a href="{{ route('home', ['book' => $found->id]) }}" class="btn-glow">✍️ {{ __('Quote from this book') }}</a>
+                            @endauth
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="bookshelf">
                 @forelse ($books as $book)
                     <a href="{{ route('book', $book) }}" class="book-cover reveal" style="--cover: {{ $book->coverColor() }}; --i: {{ $loop->index }}">
@@ -54,15 +75,17 @@
                         @if ($book->author)
                             <span class="book-author" dir="auto">{{ $book->author }}</span>
                         @endif
-                        <span class="book-count">✍️ {{ $book->quotes_count }}</span>
+                        <span class="book-count">✍️ {{ $book->quotes_count }}@if ($book->read_url) · 📖 {{ __('Free') }}@endif</span>
                         @if ($book->verified)
                             <span class="book-verified" title="{{ __('The AI confirmed this book') }}">✓</span>
                         @endif
                     </a>
                 @empty
-                    <p class="empty-box col-span-full">
-                        {{ $search !== '' ? __('No book matches your search.') : __('The library is still empty. Add a book to your next quote!') }}
-                    </p>
+                    @unless ($found)
+                        <p class="empty-box col-span-full">
+                            {{ $search !== '' ? __('We couldn\'t find this book. Check its name.') : __('The library is still empty. Add a book to your next quote!') }}
+                        </p>
+                    @endunless
                 @endforelse
             </div>
         </section>

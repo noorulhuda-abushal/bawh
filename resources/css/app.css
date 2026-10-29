@@ -2039,3 +2039,96 @@ html[data-theme='light'] .book-check-result.is-missing { color: #b91c1c; }
     border: 1px solid var(--glass-line);
     background: rgb(242 165 74 / 0.08);
 }
+
+/* 📕 No free copy note on a book page */
+.no-free-copy {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    border: 1px dashed var(--glass-line);
+    background: var(--glass);
+}
+
+/* 📚 Book found by the AI in a search */
+.found-book {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.4rem;
+    padding: 1.2rem;
+    border-radius: 1.6rem;
+    border: 1px solid rgb(242 165 74 / 0.5);
+    background: rgb(242 165 74 / 0.08);
+}
+
+/* ➡️ On the Arabic site, English titles and quotes are still lined up on the right
+   (dir="auto" keeps their punctuation correct, text-align puts them on the right side) */
+[dir='rtl'] .quote-text,
+[dir='rtl'] .qod-text,
+[dir='rtl'] .letter-body,
+[dir='rtl'] .book-hero h1,
+[dir='rtl'] .book-hero p,
+[dir='rtl'] .mirror-quote,
+[dir='rtl'] .answer-card p,
+[dir='rtl'] #letter-text,
+[dir='rtl'] #suggest-quote { text-align: right; }
+[dir='rtl'] .book-link { align-self: flex-start; }
+.book-cover.small { width: 6.5rem; height: 9.5rem; flex-shrink: 0; }
+.book-cover.small .book-title { font-size: 0.85rem; }
+
+/* 🧭 Welcome tour */
+.tour {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    animation: tour-fade 0.35s both;
+}
+.tour.is-leaving { opacity: 0; transition: opacity 0.3s; }
+@keyframes tour-fade { from { opacity: 0; } }
+
+/* the "hole" around the button: a huge shadow darkens everything else */
+.tour-spot {
+    position: fixed;
+    border-radius: 1.2rem;
+    box-shadow:
+        0 0 0 3px var(--color-tuwaiq-orange),
+        0 0 30px 6px rgb(242 165 74 / 0.55),
+        0 0 0 200vmax rgb(8 5 20 / 0.72);
+    transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    animation: tour-glow 1.8s ease-in-out infinite;
+}
+@keyframes tour-glow {
+    50% { box-shadow: 0 0 0 3px var(--color-tuwaiq-orange), 0 0 44px 12px rgb(242 165 74 / 0.75), 0 0 0 200vmax rgb(8 5 20 / 0.72); }
+}
+
+.tour-card {
+    position: fixed;
+    width: min(22rem, calc(100vw - 2rem));
+    padding: 1.3rem 1.4rem 1.1rem;
+    border-radius: 1.5rem;
+    background: var(--panel);
+    color: var(--panel-ink);
+    border: 1px solid var(--glass-line);
+    box-shadow: 0 30px 60px -15px #000;
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+    transition: opacity 0.3s, transform 0.3s, top 0.35s, left 0.35s;
+}
+.tour-card.is-in { opacity: 1; transform: none; }
+.tour-count { font-size: 0.75rem; opacity: 0.6; }
+.tour-title { margin-top: 0.2rem; font-size: 1.2rem; font-weight: 800; color: var(--color-tuwaiq-orange); }
+.tour-text { margin-top: 0.4rem; line-height: 1.8; }
+.tour-dots { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.9rem; }
+.tour-dots span { width: 0.4rem; height: 0.4rem; border-radius: 999px; background: currentColor; opacity: 0.25; transition: all 0.3s; }
+.tour-dots span.is-on { width: 1.2rem; opacity: 1; background: var(--color-tuwaiq-orange); }
+.tour-buttons { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.tour-skip { font-size: 0.85rem; opacity: 0.6; }
+.tour-skip:hover { opacity: 1; text-decoration: underline; }
+.tour-buttons .btn-ghost, .tour-buttons .btn-primary { padding: 0.45rem 1.1rem; font-size: 0.9rem; }
+html.touring { overflow-x: hidden; }
+[data-motion='reduce'] .tour-spot, [data-motion='reduce'] .tour-card { transition: none; animation: none; }
+
+/* 🧭 The tour button in the settings */
+.setting-option.is-tour { border: 1px dashed currentColor; opacity: 0.85; }

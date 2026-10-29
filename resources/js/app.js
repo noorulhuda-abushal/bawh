@@ -1313,6 +1313,157 @@ function watchScroll() {
     update();
 }
 
+// 🧭 22) Welcome tour: lights up every button one by one and explains it.
+// It starts by itself the first time this device opens the site, and again from ⚙️ Settings.
+const TOUR_KEY = 'bawh-tour-seen';
+
+function startTour() {
+    // only the steps whose button is on the page and visible (e.g. guests have no profile)
+    const steps = (window.tourSteps || []).filter(([selector]) => {
+        if (!selector) return true;
+        const el = document.querySelector(selector);
+        return el && el.getBoundingClientRect().width > 0;
+    });
+    if (!steps.length || document.querySelector('.tour')) return;
+
+    try {
+        localStorage.setItem(TOUR_KEY, '1');
+    } catch {}
+    document.querySelectorAll('[popover]:popover-open').forEach((p) => p.hidePopover());
+
+    // the dark layer with a "hole" (spot) around the button, and the card that explains it
+    const tour = document.createElement('div');
+    tour.className = 'tour';
+    tour.innerHTML = `
+        <div class="tour-spot"></div>
+        <div class="tour-card" role="dialog" aria-modal="true" aria-live="polite">
+            <p class="tour-count"></p>
+            <h3 class="tour-title"></h3>
+            <p class="tour-text"></p>
+            <div class="tour-dots"></div>
+            <div class="tour-buttons">
+                <button type="button" class="tour-skip">${t('Skip')}</button>
+                <span class="flex-1"></span>
+                <button type="button" class="tour-back btn-ghost">${t('Back')}</button>
+                <button type="button" class="tour-next btn-primary">${t('Next')}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(tour);
+    document.documentElement.classList.add('touring');
+
+    const spot = tour.querySelector('.tour-spot');
+    const card = tour.querySelector('.tour-card');
+    tour.querySelector('.tour-dots').innerHTML = steps.map(() => '<span></span>').join('');
+    let index = 0;
+    let target = null;
+
+    // put the spot around the button, and the card under it (or above it if there's no room)
+    const place = () => {
+        const gap = 12;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const box = card.getBoundingClientRect();
+
+        if (!target) {
+            spot.style.cssText = `top:${vh / 2}px; left:${vw / 2}px; width:0; height:0;`;
+            card.style.top = `${Math.max(16, (vh - box.height) / 2)}px`;
+            card.style.left = `${Math.max(16, (vw - box.width) / 2)}px`;
+            return;
+        }
+
+        const r = target.getBoundingClientRect();
+        const pad = 8;
+        spot.style.cssText = `top:${r.top - pad}px; left:${r.left - pad}px; width:${r.width + pad * 2}px; height:${r.height + pad * 2}px;`;
+
+        const below = r.bottom + pad + gap;
+        let top = below + box.height <= vh - 16 ? below : r.top - pad - gap - box.height;
+        // big element (no room above or below): keep the card inside the screen, at the bottom
+        if (top < 16) top = vh - box.height - 16;
+        top = Math.min(Math.max(16, top), vh - box.height - 16);
+        let left = r.left + r.width / 2 - box.width / 2;
+        left = Math.min(Math.max(16, left), vw - box.width - 16);
+        card.style.top = `${top}px`;
+        card.style.left = `${left}px`;
+    };
+
+    const show = (i) => {
+        index = i;
+        const [selector, title, text] = steps[i];
+        target = selector ? document.querySelector(selector) : null;
+
+        tour.querySelector('.tour-count').textContent = t(':n of :total').replace(':n', i + 1).replace(':total', steps.length);
+        tour.querySelector('.tour-title').textContent = title;
+        tour.querySelector('.tour-text').textContent = text;
+        tour.querySelectorAll('.tour-dots span').forEach((dot, k) => dot.classList.toggle('is-on', k === i));
+        tour.querySelector('.tour-back').hidden = i === 0;
+        tour.querySelector('.tour-skip').hidden = i === steps.length - 1;
+        tour.querySelector('.tour-next').textContent = i === 0 ? t('Start') : i === steps.length - 1 ? t('Finish') : t('Next');
+
+        card.classList.remove('is-in');
+        if (target) {
+            target.classList.add('is-visible'); // in case it's a section that appears on scroll
+            target.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' });
+        }
+        setTimeout(() => {
+            place();
+            card.classList.add('is-in');
+            tour.querySelector('.tour-next').focus({ preventScroll: true });
+        }, target ? 450 : 50);
+    };
+
+    const end = () => {
+        window.removeEventListener('resize', place);
+        window.removeEventListener('scroll', place);
+        document.removeEventListener('keydown', keys);
+        document.documentElement.classList.remove('touring');
+        tour.classList.add('is-leaving');
+        setTimeout(() => tour.remove(), 300);
+        if (index === steps.length - 1 && !reduceMotion()) confetti();
+    };
+
+    const rtl = document.documentElement.dir === 'rtl';
+    const keys = (event) => {
+        if (event.key === 'Escape') end();
+        if (event.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) tour.querySelector('.tour-next').click();
+        if (event.key === (rtl ? 'ArrowRight' : 'ArrowLeft') && index > 0) show(index - 1);
+    };
+
+    tour.querySelector('.tour-next').addEventListener('click', () => (index < steps.length - 1 ? show(index + 1) : end()));
+    tour.querySelector('.tour-back').addEventListener('click', () => show(index - 1));
+    tour.querySelector('.tour-skip').addEventListener('click', end);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, { passive: true });
+    document.addEventListener('keydown', keys);
+
+    show(0);
+}
+
+function setupTour() {
+    // ⚙️ On the home page, the settings button starts the tour right away (no page reload)
+    document.getElementById('start-tour')?.addEventListener('click', (event) => {
+        if (!window.tourSteps) return; // other pages: the link goes to the home page with ?tour=1
+        event.preventDefault();
+        startTour();
+    });
+    if (!window.tourSteps) return;
+
+    const url = new URL(location.href);
+    const asked = url.searchParams.has('tour');
+    if (asked) {
+        url.searchParams.delete('tour');
+        history.replaceState(null, '', url);
+    }
+
+    let seen = false;
+    try {
+        seen = localStorage.getItem(TOUR_KEY) === '1';
+    } catch {}
+    // don't start it over an open box (e.g. a quote with an error)
+    if ((asked || !seen) && !document.querySelector('[popover]:popover-open')) {
+        setTimeout(startTour, asked ? 300 : 1400);
+    }
+}
+
 // 🚀 When the page is ready
 document.addEventListener('DOMContentLoaded', () => {
     makeStars();
@@ -1340,4 +1491,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // When editing, scroll to the quote being edited
     document.querySelector('form.quote-card textarea')?.focus();
+
+    setupTour();
 });

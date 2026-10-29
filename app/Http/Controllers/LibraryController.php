@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Quote;
 use App\Support\Ai;
 use App\Support\BookFinder;
+use App\Support\BookLinks;
 use App\Support\FeelingMirror;
 use App\Support\Safety;
 use Illuminate\Http\Request;
@@ -21,17 +22,30 @@ class LibraryController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         $books = Book::withCount('quotes')
-            ->has('quotes')
-            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
-                ->where('title', 'like', '%' . $search . '%')
-                ->orWhere('author', 'like', '%' . $search . '%')))
+            // the shelf shows books with quotes; a search looks in every book we know
+            ->when($search === '', fn ($query) => $query->has('quotes'))
             ->orderByDesc('quotes_count')
             ->orderBy('title')
             ->get();
 
+        // 🔍 Search that ignores tashkeel, ة/ه, أ/ا… (so "اللامبالاه" finds "اللامبالاة")
+        if ($search !== '') {
+            $needle = FeelingMirror::clean($search);
+            $books = $books->filter(fn ($book) => str_contains(FeelingMirror::clean($book->title . ' ' . $book->author), $needle))->values();
+        }
+
+        // ✨ Not in our library? Ask the AI if it's a real book, and add it so people can quote it
+        $found = null;
+        if ($search !== '' && $books->isEmpty() && mb_strlen($search) >= 2) {
+            $result = BookFinder::check($search);
+            if ($result['status'] === 'found') {
+                $found = BookFinder::save($result)->loadCount('quotes');
+            }
+        }
+
         $aiEnabled = Ai::enabled();
 
-        return view('library', ['page' => 'Library'] + compact('books', 'search', 'aiEnabled'));
+        return view('library', ['page' => 'Library'] + compact('books', 'search', 'aiEnabled', 'found'));
     }
 
     /**
@@ -39,6 +53,9 @@ class LibraryController extends Controller
      */
     public function show(Book $book)
     {
+        // 📖 Look for a free legal copy (only the first time, then every 30 days)
+        BookLinks::refreshIfNeeded($book);
+
         $quotes = $book->quotes()->with(['user', 'book'])->withReactionCounts()->latest()->get();
 
         $favoriteIds = Auth::check() ? Auth::user()->favorites()->pluck('quotes.id')->all() : [];

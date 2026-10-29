@@ -168,7 +168,7 @@
             </div>
 
             {{-- 💔 Filter by feeling --}}
-            <nav class="flex flex-wrap gap-2" aria-label="{{ __('Feelings') }}">
+            <nav class="flex flex-wrap gap-2" data-tour="moods" aria-label="{{ __('Feelings') }}">
                 <a href="{{ route('home', \Illuminate\Support\Arr::except($filters, 'mood')) }}#quotes"
                     class="mood-chip {{ $mood ? '' : 'is-active' }}" style="--mood: #ffffff">✦ {{ __('All') }}</a>
                 @foreach (\App\Models\Quote::MOODS as $key => $info)
@@ -367,7 +367,7 @@
         </button>
 
         {{-- ✍️ Share pop-up (opens again by itself if the quote had an error) --}}
-        <div id="quote-popup" popover @if (($errors->has('content') || $errors->has('book_title')) && ! $editingId) data-open @endif class="panel">
+        <div id="quote-popup" popover @if ((($errors->has('content') || $errors->has('book_title')) && ! $editingId) || $prefillBook) data-open @endif class="panel">
             <form method="POST" action="{{ route('store_quote') }}" class="space-y-4">
                 @csrf
                 <div class="flex items-center justify-between">
@@ -388,7 +388,7 @@
                 </div>
 
                 <x-mood-picker :selected="old('mood', 'relief')" :anonymous="(bool) old('is_anonymous')" />
-                <x-book-field />
+                <x-book-field :book="$prefillBook" />
 
                 {{-- ✨ AI: suggests a better wording (only if the AI key is set in .env) --}}
                 @if ($aiEnabled)
@@ -412,4 +412,32 @@
             </form>
         </div>
     @endauth
+
+    {{-- 🧭 Welcome tour: every step = [what to light up, title, text]. app.js shows them one by one --}}
+    @php
+        $tourSteps = [
+            [null, __('Welcome to Bawh 🤍'), __('A space for what we couldn\'t say. Let me show you around in one minute.')],
+            ['.logo', __('Home'), __('Tap the logo anytime to come back to the home page.')],
+            auth()->check()
+                ? ['.hero [popovertarget="quote-popup"]', __('Write your bawh ✍️'), __('Write what is in your heart, pick a feeling, and share it with your name or anonymously.')]
+                : ['.site-nav .btn-primary', __('Log in'), __('Log in or create an account to write your own quotes and react to others.')],
+            ['.quote-of-day', __('✨ Quote of the Day'), __('A new quote every day, chosen from what people wrote.')],
+            ['#mirror', __('🪞 Feeling mirror'), __('Write how you feel in a few words, and we will find quotes that feel the same.')],
+            ['[data-tour="moods"]', __('Feelings'), __('Show only the quotes of one feeling: sad, love, hope…')],
+            ['#search-input', __('Search'), __('Look for any word inside the quotes.')],
+            ['#quotes .reactions', __('Reactions'), __('Tell the writer how their words reached you: 🤍 I felt it, 🫂 You\'re not alone, ✨ It touched me.')],
+            ['#quotes .card-actions', __('Quote buttons'), __('Copy the quote, save it as a story picture, or report it if it is not okay.')],
+            ['#question', __('Tonight\'s question'), __('A new question every day. Answer it and read what others answered.')],
+            ['#envelope', __('💌 The envelope'), __('Open it and get a random quote, like a letter from a stranger.')],
+            ['.site-nav a[href$="/library"]', __('📚 Library'), __('Books that people quoted from, a free reading link when there is one, and an AI that suggests a book for your feeling.')],
+            ['.site-nav a[href$="/letters"]', __('💌 Letters'), __('Write a letter you will never send. Keep it for yourself or share it without your name.')],
+            ['.sounds-btn', __('🎧 Sounds'), __('Rain, waves, a fireplace… calm sounds to write with.')],
+            ['[popovertarget="settings-panel"]', __('⚙️ Settings'), __('Language, night or dawn theme, text size, motion, and this tour again.')],
+            auth()->check() ? ['.site-nav a[href*="/users/"]', __('👤 Your profile'), __('Your quotes, your followers and the people you follow.')] : null,
+            [null, __('That\'s it! 🎉'), __('Say what is in your heart tonight. You can watch this tour again from ⚙️ Settings.')],
+        ];
+    @endphp
+    <script>
+        window.tourSteps = @json(array_values(array_filter($tourSteps)));
+    </script>
 @endsection

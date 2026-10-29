@@ -29,6 +29,26 @@
                     @endif
                 </p>
 
+                {{-- 📖 Read it for free (legal libraries only), or say there is no free copy --}}
+                <div class="mt-5">
+                    @if ($book->read_url)
+                        <a href="{{ $book->read_url }}" target="_blank" rel="noopener" class="btn-glow">
+                            📖 {{ __('Read it for free on :source', ['source' => $book->read_source]) }} ↗
+                        </a>
+                        <p class="mt-2 text-xs opacity-70">{{ __('A free and legal copy, from an open library.') }}</p>
+                    @elseif ($book->read_checked_at)
+                        <p class="no-free-copy">📕 {{ __('There is no free copy of this book.') }}</p>
+                        <p class="mt-1 text-xs opacity-70">{{ __('It is probably still under copyright. You can find it in bookstores or libraries.') }}</p>
+                    @else
+                        <p class="no-free-copy">⏳ {{ __('We couldn\'t check for a free copy right now. Try again later.') }}</p>
+                    @endif
+                </div>
+
+                {{-- ✍️ Write a quote from this book (the share box opens with the book filled in) --}}
+                @auth
+                    <a href="{{ route('home', ['book' => $book->id]) }}" class="btn-ghost mt-3">✍️ {{ __('Quote from this book') }}</a>
+                @endauth
+
                 {{-- 🛡️ Admin can remove a wrong book --}}
                 @if (auth()->user()?->is_admin)
                     <form method="POST" action="{{ route('delete_book', $book) }}" class="mt-4"

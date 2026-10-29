@@ -21,7 +21,7 @@ class BookFinder
         $author = filled($author) ? trim($author) : null;
 
         // Already in our library and confirmed? No need to ask the AI again
-        $known = Book::where('slug', Book::makeSlug($title, $author))->where('verified', true)->first();
+        $known = self::known($title, $author);
         if ($known) {
             return ['status' => 'found', 'title' => $known->title, 'author' => $known->author];
         }
@@ -44,6 +44,20 @@ class BookFinder
         }
 
         return $result;
+    }
+
+    /**
+     * A confirmed book we already have: same title and author,
+     * or (if no author was written) the same title by any author.
+     */
+    private static function known(string $title, ?string $author): ?Book
+    {
+        $exact = Book::where('slug', Book::makeSlug($title, $author))->where('verified', true)->first();
+        if ($exact || $author) {
+            return $exact;
+        }
+
+        return Book::where('slug', 'like', FeelingMirror::clean($title) . '|%')->where('verified', true)->first();
     }
 
     private static function askAi(string $title, ?string $author): array

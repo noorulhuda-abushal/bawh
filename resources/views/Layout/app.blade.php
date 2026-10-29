@@ -48,7 +48,7 @@
             'Following ✓', '+ Follow', 'It is gone… lighter now',
             'Saved! Add it to your story 📸', 'Making your story…', 'Your words, without your name 🌙', 'Bawh · A space for what we could not say',
             'Thank you, the report reached the admin 🤍', 'Sound on 🎧', 'Sound off', 'Saved ✓', 'Reported ✓',
-            'Write the book title first 📖', 'Checking the book…', 'Looking on the shelf…', 'Suggest', 'You are now following :name 👥', 'You unfollowed :name',
+            'Write the book title first 📖', 'Next', 'Back', 'Skip', 'Start', 'Finish', ':n of :total', 'Checking the book…', 'Looking on the shelf…', 'Suggest', 'You are now following :name 👥', 'You unfollowed :name',
         ];
         $translations = [];
         foreach ($jsWords as $word) {
@@ -157,6 +157,10 @@
             <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> {{ __('Send') }}</li>
             <li><kbd>Esc</kbd> {{ __('Close') }}</li>
         </ul>
+
+        {{-- 🧭 Watch the welcome tour again (it opens on the home page) --}}
+        <p class="setting-title">{{ __('Help') }}</p>
+        <a href="{{ route('home', ['tour' => 1]) }}" id="start-tour" class="setting-option is-tour block text-center">🧭 {{ __('Welcome tour') }}</a>
 
         <button type="button" id="reset-settings" class="mt-6 w-full text-sm opacity-60 hover:underline">
             {{ __('Reset to default') }}

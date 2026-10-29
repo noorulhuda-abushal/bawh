@@ -62,6 +62,9 @@ class QuoteController extends Controller
         $question = __(Questions::today());
         $answers = Answer::whereDate('question_date', now()->toDateString())->latest()->take(9)->get();
 
+        // 📚 "Quote from this book": the share box opens with this book already written
+        $prefillBook = $request->filled('book') ? \App\Models\Book::find($request->integer('book')) : null;
+
         // 📚 How many books are in the library (for the numbers at the top)
         $stats['books'] = \App\Models\Book::has('quotes')->count();
 
@@ -74,7 +77,7 @@ class QuoteController extends Controller
         return view('welcome', compact(
             'quotes', 'quoteOfDay', 'stats', 'favoriteIds', 'reacted',
             'myQuotesCount', 'aiEnabled', 'followingIds', 'mood', 'search', 'sort',
-            'question', 'answers', 'streak'
+            'question', 'answers', 'streak', 'prefillBook'
         ));
     }
 
