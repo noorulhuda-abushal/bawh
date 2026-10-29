@@ -28,7 +28,7 @@ class QuoteController extends Controller
         $sort = $request->query('sort') === 'top' ? 'top' : 'new';
 
         // withReactionCounts() adds felt_count, not_alone_count, touched_count and reactions_count
-        $quotes = Quote::with('user')
+        $quotes = Quote::with(['user', 'book'])
             ->withReactionCounts()
             ->when($mood, fn ($query) => $query->where('mood', $mood))
             ->when($search !== '', fn ($query) => $query->where('content', 'like', '%' . $search . '%'))
@@ -61,6 +61,9 @@ class QuoteController extends Controller
         // 🌙 The question of the day and its answers (newest first)
         $question = __(Questions::today());
         $answers = Answer::whereDate('question_date', now()->toDateString())->latest()->take(9)->get();
+
+        // 📚 How many books are in the library (for the numbers at the top)
+        $stats['books'] = \App\Models\Book::has('quotes')->count();
 
         // 🔥 My streak (days in a row I wrote something)
         $streak = Auth::check() ? Journey::streak(Auth::user()) : 0;
@@ -217,6 +220,7 @@ class QuoteController extends Controller
             'profile' => $quote->is_anonymous ? null : route('profile', $quote->user),
             'mood' => $mood['emoji'] . ' ' . __($mood['name']),
             'color' => $mood['color'],
+            'book' => $quote->book ? '📖 ' . $quote->book->title . ($quote->book->author ? ' — ' . $quote->book->author : '') : null,
         ];
     }
 }

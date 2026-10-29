@@ -327,6 +327,8 @@ async function openEnvelope() {
             // 🌙 anonymous quotes have no profile link
             if (data.profile) author.href = data.profile;
             else author.removeAttribute('href');
+            const book = document.getElementById('letter-book');
+            if (book) book.textContent = data.book || '';
             letter.hidden = false;
             document.getElementById('envelope-hint').hidden = true;
             again.hidden = false;
@@ -360,6 +362,10 @@ function confetti() {
 
 // 👆 11) All clicks on the page
 document.addEventListener('click', async (event) => {
+    // 📚 Check the book with AI
+    const bookCheck = event.target.closest('.book-check-btn');
+    if (bookCheck) return checkBook(bookCheck);
+
     // 📸 Story picture
     const story = event.target.closest('.story-btn');
     if (story) return makeStory(story);
@@ -469,6 +475,13 @@ document.addEventListener('click', async (event) => {
 // 🗑️ 12) Delete: ask first, then fade the card out, then send the form
 document.addEventListener('submit', (event) => {
     const form = event.target;
+
+    // 📚 Suggest a book
+    if (form.id === 'suggest-form') {
+        event.preventDefault();
+        suggestBook(form);
+        return;
+    }
 
     // 🪞 Mirror
     if (form.id === 'mirror-form') {
@@ -666,6 +679,89 @@ function scrollProgress() {
     update();
 }
 
+// 📚 Ask the server (and its AI) if the book exists and who wrote it
+async function checkBook(button) {
+    const field = button.closest('.book-field');
+    const titleInput = field.querySelector('[data-book-title]');
+    const authorInput = field.querySelector('[data-book-author]');
+    const result = field.querySelector('.book-check-result');
+    const title = titleInput.value.trim();
+
+    if (title.length < 2) {
+        result.textContent = t('Write the book title first 📖');
+        titleInput.focus();
+        return;
+    }
+
+    button.disabled = true;
+    result.className = 'book-check-result text-sm';
+    result.textContent = t('Checking the book…');
+
+    try {
+        const data = await postJson(button.dataset.url, { title, author: authorInput.value.trim() });
+        if (data.status === 'found') {
+            // ✓ put the correct title and author in the fields
+            titleInput.value = data.title;
+            if (data.author) authorInput.value = data.author;
+            result.textContent = `✓ ${data.title}${data.author ? ' — ' + data.author : ''}`;
+            result.classList.add('is-found');
+            sparkleAround(button, '✦', 8);
+        } else {
+            result.textContent = data.message;
+            result.classList.add(data.status === 'not_found' ? 'is-missing' : 'is-unchecked');
+            if (data.status === 'not_found') replay(titleInput, 'shake', 450);
+        }
+    } catch (error) {
+        result.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+}
+
+// ✨ "Suggest me a book" in the library
+async function suggestBook(form) {
+    const input = document.getElementById('suggest-input');
+    const button = form.querySelector('button[type="submit"]');
+    const text = input.value.trim();
+    if (text.length < 2) {
+        showToast(t('Write at least 2 letters ✍️'));
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = t('Looking on the shelf…');
+    replay(document.getElementById('suggest'), 'shining', 1200);
+
+    try {
+        const data = await postJson(form.dataset.url, { text });
+        const box = document.getElementById('suggest-result');
+        document.getElementById('suggest-support').hidden = !data.support;
+
+        if (!data.found) {
+            showToast(data.message);
+            return;
+        }
+
+        const cover = document.getElementById('suggest-book');
+        cover.style.setProperty('--cover', data.book.color);
+        cover.href = data.book.url;
+        document.getElementById('suggest-title').textContent = data.book.title;
+        document.getElementById('suggest-author').textContent = data.book.author || '';
+        document.getElementById('suggest-reason').textContent = data.reason;
+        document.getElementById('suggest-quote').textContent = data.quote || '';
+        document.getElementById('suggest-link').href = data.book.url;
+        document.getElementById('suggest-by').hidden = data.by !== 'ai';
+        box.hidden = false;
+        replay(box, 'mirror-flash', 700);
+        replay(cover, 'book-pop', 900);
+    } catch (error) {
+        showToast(error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = `📖 ${t('Suggest')}`;
+    }
+}
+
 // 💬 Show a little label above a button for a moment (like "Copied ✓"), then put the old label back
 function flashTip(button, text) {
     const old = button.dataset.tip;
@@ -792,7 +888,11 @@ async function makeStory(button) {
     // the writer
     ctx.font = '600 38px Marhey, sans-serif';
     ctx.globalAlpha = 0.75;
-    ctx.fillText(`— ${button.dataset.author}`, W / 2, cardY + cardH - 60);
+    ctx.fillText(`— ${button.dataset.author}`, W / 2, cardY + cardH - (button.dataset.book ? 90 : 60));
+    if (button.dataset.book) {
+        ctx.font = '600 30px Marhey, sans-serif';
+        ctx.fillText(`📖 ${button.dataset.book}`, W / 2, cardY + cardH - 42, cardW - 120);
+    }
     ctx.globalAlpha = 1;
 
     // 🏷️ the logo: بوح + brush line + BAWH
@@ -1153,6 +1253,13 @@ function showMirror(data) {
         if (quote.profile) author.href = quote.profile;
 
         item.append(text, author);
+        if (quote.book) {
+            const book = document.createElement('p');
+            book.className = 'mt-1 text-xs opacity-75';
+            book.dir = 'auto';
+            book.textContent = quote.book;
+            item.appendChild(book);
+        }
         list.appendChild(item);
     });
 

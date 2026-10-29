@@ -47,7 +47,8 @@
             'Log in to react', 'Write about this feeling', 'Letting it go…', 'It is',
             'Following ✓', '+ Follow', 'It is gone… lighter now',
             'Saved! Add it to your story 📸', 'Making your story…', 'Your words, without your name 🌙', 'Bawh · A space for what we could not say',
-            'Thank you, the report reached the admin 🤍', 'Sound on 🎧', 'Sound off', 'Saved ✓', 'Reported ✓', 'You are now following :name 👥', 'You unfollowed :name',
+            'Thank you, the report reached the admin 🤍', 'Sound on 🎧', 'Sound off', 'Saved ✓', 'Reported ✓',
+            'Write the book title first 📖', 'Checking the book…', 'Looking on the shelf…', 'Suggest', 'You are now following :name 👥', 'You unfollowed :name',
         ];
         $translations = [];
         foreach ($jsWords as $word) {

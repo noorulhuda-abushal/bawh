@@ -31,6 +31,14 @@
     {{-- dir="auto": an English quote stays left-to-right even on the Arabic site, and the opposite --}}
     <p class="quote-text" dir="auto">{{ $quote->quoted() }}</p>
 
+    {{-- 📖 The book it comes from (click to open the book in the library) --}}
+    @if ($quote->book)
+        <a href="{{ route('book', $quote->book) }}" class="book-link" dir="auto">
+            📖 {{ $quote->book->title }}@if ($quote->book->author)<span class="opacity-70"> — {{ $quote->book->author }}</span>@endif
+            @if ($quote->book->verified)<span class="book-check" title="{{ __('The AI confirmed this book') }}">✓</span>@endif
+        </a>
+    @endif
+
     {{-- 🤍 🫂 ✨ Reactions: everyone sees the numbers, only logged-in users can react --}}
     <div class="reactions">
         @foreach (\App\Models\Quote::REACTIONS as $type => $reaction)
@@ -86,7 +94,8 @@
             {{-- 📸 Save the quote as a story picture (Snapchat / Instagram) --}}
             <button type="button" class="story-btn" data-tip="{{ __('Share as a story') }}" aria-label="{{ __('Share as a story') }}"
                 data-text="{{ $quote->quoted() }}" data-mood="{{ $mood['emoji'] }} {{ __($mood['name']) }}"
-                data-color="{{ $mood['color'] }}" data-author="{{ $quote->authorName() }}">
+                data-color="{{ $mood['color'] }}" data-author="{{ $quote->authorName() }}"
+                data-book="{{ $quote->book ? $quote->book->title . ($quote->book->author ? ' — ' . $quote->book->author : '') : '' }}">
                 {{-- a story ring (like Instagram / Snapchat stories) with a + inside --}}
                 <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                     <defs>

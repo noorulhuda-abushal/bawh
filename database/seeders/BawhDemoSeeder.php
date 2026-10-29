@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Book;
 use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -91,10 +92,26 @@ class BawhDemoSeeder extends Seeder
         'إني ما كنت غلطانة.',
     ];
 
+    // 📚 Real quotes from old (public domain) books: [quote, feeling, book title, author]
+    private const BOOK_QUOTES = [
+        ['على قدر أهل العزم تأتي العزائم، وتأتي على قدر الكرام المكارم', 'hope', 'ديوان المتنبي', 'أبو الطيب المتنبي'],
+        ['ما كل ما يتمنى المرء يدركه، تجري الرياح بما لا تشتهي السفن', 'letdown', 'ديوان المتنبي', 'أبو الطيب المتنبي'],
+        ['I am no bird; and no net ensnares me: I am a free human being with an independent will.', 'hope', 'Jane Eyre', 'Charlotte Brontë'],
+        ["I'm not afraid of storms, for I'm learning how to sail my ship.", 'hope', 'Little Women', 'Louisa May Alcott'],
+        ['I declare after all there is no enjoyment like reading!', 'relief', 'Pride and Prejudice', 'Jane Austen'],
+        ["Isn't it nice to think that tomorrow is a new day with no mistakes in it yet?", 'relief', 'Anne of Green Gables', 'L. M. Montgomery'],
+    ];
+
     public function run(): void
     {
         if (User::where('email', self::USERS[0][1])->exists()) {
-            $this->command?->warn('The demo data is already there ✓');
+            // The users are already there: only add the books if they're missing
+            if (Book::doesntExist()) {
+                $this->addBooks(User::whereIn('email', array_column(self::USERS, 1))->get());
+                $this->command?->info('📚 Books added to the library!');
+            } else {
+                $this->command?->warn('The demo data is already there ✓');
+            }
 
             return;
         }
@@ -158,6 +175,27 @@ class BawhDemoSeeder extends Seeder
             ]);
         }
 
+        $this->addBooks($users);
+
         $this->command?->info('🌱 Bawh is full of life now! ' . $users->count() . ' users, ' . $quotes->count() . ' quotes.');
+    }
+
+    // 📚 Adds the book quotes, each linked to its (verified) book in the library
+    private function addBooks($users): void
+    {
+        foreach (self::BOOK_QUOTES as $i => [$text, $mood, $title, $author]) {
+            $book = Book::firstOrCreate(
+                ['slug' => Book::makeSlug($title, $author)],
+                ['title' => $title, 'author' => $author, 'verified' => true]
+            );
+
+            $quote = $users[($i * 5 + 2) % $users->count()]->quotes()->create([
+                'content' => $text,
+                'mood' => $mood,
+                'book_id' => $book->id,
+            ]);
+            $quote->created_at = now()->subDays(12 - $i * 2)->setTime(21, 10 + $i);
+            $quote->save();
+        }
     }
 }

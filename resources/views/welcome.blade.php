@@ -63,6 +63,7 @@
                 @endauth
                 <a href="#mirror" class="btn-ghost">🪞 {{ __('Feeling mirror') }}</a>
                 <a href="{{ route('letters') }}" class="btn-ghost">💌 {{ __('A letter that won\'t be sent') }}</a>
+                <a href="{{ route('library') }}" class="btn-ghost">📚 {{ __('Library') }}</a>
             </div>
 
             {{-- 📊 Numbers about the site (they count up when they appear) --}}
@@ -70,6 +71,7 @@
                 <div><dt>{{ __('Quotes') }}</dt><dd data-count-to="{{ $stats['quotes'] }}">{{ $stats['quotes'] }}</dd></div>
                 <div><dt>{{ __('Writers') }}</dt><dd data-count-to="{{ $stats['writers'] }}">{{ $stats['writers'] }}</dd></div>
                 <div><dt>{{ __('Reactions') }}</dt><dd data-count-to="{{ $stats['reactions'] }}">{{ $stats['reactions'] }}</dd></div>
+                <div><dt>{{ __('Books') }}</dt><dd data-count-to="{{ $stats['books'] }}">{{ $stats['books'] }}</dd></div>
             </dl>
         </div>
     </section>
@@ -238,6 +240,7 @@
                             <p class="char-count text-end text-xs opacity-70">0 / 155</p>
 
                             <x-mood-picker :selected="old('mood', $quote->mood)" :anonymous="$quote->is_anonymous" />
+                            <x-book-field :book="$quote->book" />
 
                             <div class="flex gap-2">
                                 <button type="submit" class="btn-primary">{{ __('Save') }}</button>
@@ -335,6 +338,7 @@
                     <span id="letter-mood" class="mood-tag"></span>
                     <p id="letter-text" class="quote-text mt-3" dir="auto"></p>
                     <a id="letter-author" class="mt-3 inline-block font-bold hover:underline"></a>
+                    <p id="letter-book" class="mt-1 text-sm opacity-75" dir="auto"></p>
                 </div>
 
                 <p id="envelope-hint" class="opacity-80">{{ __('Every time, a random bawh from someone. Tap the envelope.') }}</p>
@@ -363,7 +367,7 @@
         </button>
 
         {{-- ✍️ Share pop-up (opens again by itself if the quote had an error) --}}
-        <div id="quote-popup" popover @if ($errors->has('content') && ! $editingId) data-open @endif class="panel">
+        <div id="quote-popup" popover @if (($errors->has('content') || $errors->has('book_title')) && ! $editingId) data-open @endif class="panel">
             <form method="POST" action="{{ route('store_quote') }}" class="space-y-4">
                 @csrf
                 <div class="flex items-center justify-between">
@@ -384,6 +388,7 @@
                 </div>
 
                 <x-mood-picker :selected="old('mood', 'relief')" :anonymous="(bool) old('is_anonymous')" />
+                <x-book-field />
 
                 {{-- ✨ AI: suggests a better wording (only if the AI key is set in .env) --}}
                 @if ($aiEnabled)

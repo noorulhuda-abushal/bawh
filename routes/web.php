@@ -6,6 +6,7 @@ use App\Http\Controllers\AnswerController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\QuoteController;
@@ -38,6 +39,12 @@ Route::get('/letters', [LetterController::class, 'index'])->name('letters');
 // 🚪 Opening /logout in the address bar (or refreshing it) just goes home.
 // Logging out itself stays a POST (the button), so no link on another site can log you out.
 Route::get('/logout', fn () => redirect()->route('home'));
+
+// 📚 The library: all the books quotes came from, and one book's page
+Route::get('/library', [LibraryController::class, 'index'])->name('library');
+Route::get('/library/{book}', [LibraryController::class, 'show'])->name('book');
+// ✨ The AI suggests a book from the library for your feeling
+Route::post('/library/suggest', [LibraryController::class, 'suggest'])->name('library_suggest');
 
 // 👤 Profile page of any user: /users/5
 Route::get('/users/{user}', [UserController::class, 'show'])->name('profile');
@@ -74,6 +81,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/letters', [LetterController::class, 'store'])->name('store_letter');
     Route::delete('/letters/{letter}', [LetterController::class, 'destroy'])->name('delete_letter');
 
+    // 📚 ✨ Check that a book exists (button in the share box)
+    Route::post('/books/check', [LibraryController::class, 'check'])->name('check_book');
+
     // 🌙 Answer the question of the day
     Route::post('/answers', [AnswerController::class, 'store'])->name('store_answer');
     Route::delete('/answers/{answer}', [AnswerController::class, 'destroy'])->name('delete_answer');
@@ -91,4 +101,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('admin_delete_user');
     Route::post('/users/{user}/role', [AdminController::class, 'toggleAdmin'])->name('admin_toggle_role');
     Route::delete('/reports/{type}/{id}', [AdminController::class, 'dismissReports'])->whereNumber('id')->name('admin_dismiss_reports');
+    Route::delete('/library/{book}', [LibraryController::class, 'destroy'])->name('delete_book');
 });

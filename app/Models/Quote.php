@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['content', 'mood', 'is_anonymous'])]
+#[Fillable(['content', 'mood', 'is_anonymous', 'book_id'])]
 class Quote extends Model
 {
     /**
@@ -60,6 +60,12 @@ class Quote extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // 📚 The book the quote comes from (optional)
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
     }
 
     // 🪞 The users who said "this is like me" (saved in the favorites table)

@@ -55,6 +55,12 @@
                 </a>
             @endif
 
+            {{-- 📚 Library --}}
+            <a href="{{ route('library') }}" class="nav-link {{ ($page ?? '') === 'Library' ? 'is-active' : '' }}" title="{{ __('Library') }}">
+                <span aria-hidden="true">📚</span>
+                <span class="hidden lg:inline">{{ __('Library') }}</span>
+            </a>
+
             {{-- 💌 Letters that won't be sent --}}
             <a href="{{ route('letters') }}" class="nav-link {{ ($page ?? '') === 'Letters' ? 'is-active' : '' }}"
                 title="{{ __('A letter that won\'t be sent') }}">
