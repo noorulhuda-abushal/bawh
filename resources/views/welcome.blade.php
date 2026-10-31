@@ -63,7 +63,7 @@
                 @endauth
                 <a href="#mirror" class="btn-ghost">🪞 {{ __('Feeling mirror') }}</a>
                 <a href="{{ route('letters') }}" class="btn-ghost">💌 {{ __('A letter that won\'t be sent') }}</a>
-                <a href="{{ route('library') }}" class="btn-ghost">📚 {{ __('Library') }}</a>
+                <a href="#question" class="btn-ghost">🌙 <x-day-night :night="__('Tonight\'s question')" :day="__('Today\'s question')" /></a>
             </div>
 
             {{-- 📊 Numbers about the site (they count up when they appear) --}}
@@ -358,16 +358,9 @@
     </div>
 
     @auth
-        {{-- ➕ Floating button --}}
-        <button type="button" popovertarget="quote-popup" aria-label="{{ __('Share a quote') }}" class="fab">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                stroke="currentColor" class="h-8 w-8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-        </button>
 
         {{-- ✍️ Share pop-up (opens again by itself if the quote had an error) --}}
-        <div id="quote-popup" popover @if ((($errors->has('content') || $errors->has('book_title')) && ! $editingId) || $prefillBook) data-open @endif class="panel">
+        <div id="quote-popup" popover @if ((($errors->has('content') || $errors->has('book_title')) && ! $editingId) || $prefillBook || request()->has('write')) data-open @endif class="panel">
             <form method="POST" action="{{ route('store_quote') }}" class="space-y-4">
                 @csrf
                 <div class="flex items-center justify-between">
@@ -417,7 +410,6 @@
     @php
         $tourSteps = [
             [null, __('Welcome to Bawh 🤍'), __('A space for what we couldn\'t say. Let me show you around in one minute.')],
-            ['.logo', __('Home'), __('Tap the logo anytime to come back to the home page.')],
             auth()->check()
                 ? ['.hero [popovertarget="quote-popup"]', __('Write your bawh ✍️'), __('Write what is in your heart, pick a feeling, and share it with your name or anonymously.')]
                 : ['.site-nav .btn-primary', __('Log in'), __('Log in or create an account to write your own quotes and react to others.')],
@@ -427,13 +419,17 @@
             ['#search-input', __('Search'), __('Look for any word inside the quotes.')],
             ['#quotes .reactions', __('Reactions'), __('Tell the writer how their words reached you: 🤍 I felt it, 🫂 You\'re not alone, ✨ It touched me.')],
             ['#quotes .card-actions', __('Quote buttons'), __('Copy the quote, save it as a story picture, or report it if it is not okay.')],
-            ['#question', __('Tonight\'s question'), __('A new question every day. Answer it and read what others answered.')],
+            ['#question', __('🌙 Tonight\'s question'), __('A new question every night, written by AI. Answer it without your name and read what others said. Tomorrow a new question comes and the answers start again.')],
             ['#envelope', __('💌 The envelope'), __('Open it and get a random quote, like a letter from a stranger.')],
-            ['.site-nav a[href$="/library"]', __('📚 Library'), __('Books that people quoted from, a free reading link when there is one, and an AI that suggests a book for your feeling.')],
-            ['.site-nav a[href$="/letters"]', __('💌 Letters'), __('Write a letter you will never send. Keep it for yourself or share it without your name.')],
-            ['.sounds-btn', __('🎧 Sounds'), __('Rain, waves, a fireplace… calm sounds to write with.')],
-            ['[popovertarget="settings-panel"]', __('⚙️ Settings'), __('Language, night or dawn theme, text size, motion, and this tour again.')],
-            auth()->check() ? ['.site-nav a[href*="/users/"]', __('👤 Your profile'), __('Your quotes, your followers and the people you follow.')] : null,
+            ['.dock', __('🧭 The menu'), __('Everything is here at the bottom: write, the library, home in the middle, letters, and your profile.')],
+            ['.dock-home', __('🏠 Home'), __('The page you are on rises in an orange circle, so you always know where you are.')],
+            ['.dock-item:first-child', __('✍️ Write'), __('Write a new bawh from any page.')],
+            ['.dock a[href$="/library"]', __('📚 Library'), __('Books that people quoted from, a free reading link when there is one, and an AI that suggests a book for your feeling.')],
+            ['.dock a[href$="/letters"]', __('💌 Letters'), __('Write a letter you will never send. Keep it for yourself or share it without your name.')],
+            auth()->check() ? ['.dock-me', __('👤 Your profile'), __('Your quotes, your feelings map, your badges, and the people you follow.')] : null,
+            ['.feedback-btn', __('💬 Contact support'), __('Have an idea or found a problem? Send us a note anytime, we read them all.')],
+            ['.sounds-btn', __('🎧 Sounds'), __('Rain or waves… calm sounds to write with.')],
+            ['[popovertarget="settings-panel"]', __('⚙️ Settings'), __('Language, night or dawn theme, text size, motion, contact support, and this tour again.')],
             [null, __('That\'s it! 🎉'), __('Say what is in your heart tonight. You can watch this tour again from ⚙️ Settings.')],
         ];
     @endphp

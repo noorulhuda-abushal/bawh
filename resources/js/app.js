@@ -1488,6 +1488,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // If the quote had an error, open the share box again so the user can fix it
     document.querySelector('#quote-popup[data-open]')?.showPopover();
+    // Same for the support box (contact support)
+    document.querySelector('#feedback-panel[data-open]')?.showPopover();
 
     // When editing, scroll to the quote being edited
     document.querySelector('form.quote-card textarea')?.focus();

@@ -19,6 +19,7 @@
                 ['🌙', 'Anonymous', $stats['anonymous']],
                 ['💌', 'Shared letters', $stats['letters']],
                 ['🤍', 'Reactions', $stats['reactions']],
+                ['💬', 'New notes', $stats['feedback']],
             ] as [$icon, $label, $number])
                 <div class="admin-stat">
                     <span class="text-2xl">{{ $icon }}</span>
@@ -60,6 +61,47 @@
                 </div>
             @empty
                 <p class="opacity-70">{{ __('No reports. Bawh is a safe place 🤍') }}</p>
+            @endforelse
+        </section>
+
+        {{-- 💬 Notes from visitors (contact support) --}}
+        <section id="feedback" class="admin-box reveal scroll-mt-24">
+            <h2 class="admin-title">💬 {{ __('Notes from visitors') }} ({{ $stats['feedback'] }} {{ __('new') }})</h2>
+
+            {{-- How many of each kind --}}
+            <div class="mb-2 flex flex-wrap gap-2 text-xs">
+                @foreach (\App\Models\Feedback::TYPES as $key => $type)
+                    <span class="feedback-type">{{ $type['emoji'] }} {{ __($type['name']) }}: {{ $feedback->where('type', $key)->count() }}</span>
+                @endforeach
+            </div>
+
+            @forelse ($feedback as $note)
+                @php $type = \App\Models\Feedback::TYPES[$note->type] ?? \App\Models\Feedback::TYPES['idea']; @endphp
+                <div class="report-row {{ $note->is_done ? 'is-done' : '' }}">
+                    <div class="flex-1">
+                        <span class="feedback-type">{{ $type['emoji'] }} {{ __($type['name']) }}</span>
+                        @if ($note->is_done) <span class="ms-1 text-xs font-bold text-emerald-400">✓ {{ __('Done') }}</span> @endif
+                        <p class="mt-2 whitespace-pre-line" dir="auto">{{ $note->message }}</p>
+                        <p class="mt-1 text-xs opacity-60">
+                            {{ $note->user ? $note->user->name : __('Guest') }}
+                            @if ($note->email || $note->user)
+                                · <a href="mailto:{{ $note->email ?? $note->user->email }}" class="underline">{{ $note->email ?? $note->user->email }}</a>
+                            @endif
+                            · {{ $note->created_at->translatedFormat('j M Y, g:i a') }}
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('admin_feedback_done', $note) }}">
+                        @csrf
+                        <button type="submit" class="admin-btn">{{ $note->is_done ? '↩︎ ' . __('Open again') : '✓ ' . __('Done') }}</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin_delete_feedback', $note) }}" data-confirm="{{ __('Delete it? This can\'t be undone.') }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="admin-btn danger">{{ __('Delete') }}</button>
+                    </form>
+                </div>
+            @empty
+                <p class="opacity-70">{{ __('No notes yet. When visitors send notes, they appear here.') }}</p>
             @endforelse
         </section>
 

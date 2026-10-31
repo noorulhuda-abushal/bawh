@@ -45,7 +45,7 @@
             <span class="logo-en">BAWH</span>
         </a>
 
-        {{-- End side: letters + settings + Tuwaiq logo --}}
+        {{-- End side: sounds + settings + Tuwaiq logo (Library and Letters are in the dock at the bottom) --}}
         <div class="flex items-center gap-3">
             {{-- 🛡️ Admin dashboard (admins only) --}}
             @if (auth()->user()?->is_admin)
@@ -55,18 +55,6 @@
                 </a>
             @endif
 
-            {{-- 📚 Library --}}
-            <a href="{{ route('library') }}" class="nav-link {{ ($page ?? '') === 'Library' ? 'is-active' : '' }}" title="{{ __('Library') }}">
-                <span aria-hidden="true">📚</span>
-                <span class="hidden lg:inline">{{ __('Library') }}</span>
-            </a>
-
-            {{-- 💌 Letters that won't be sent --}}
-            <a href="{{ route('letters') }}" class="nav-link {{ ($page ?? '') === 'Letters' ? 'is-active' : '' }}"
-                title="{{ __('A letter that won\'t be sent') }}">
-                <span aria-hidden="true">💌</span>
-                <span class="hidden lg:inline">{{ __('Letters') }}</span>
-            </a>
             {{-- 🎧 Sounds --}}
             <button type="button" popovertarget="sounds-panel" aria-label="{{ __('Sounds to write with') }}" title="{{ __('Sounds to write with') }}"
                 class="settings-btn sounds-btn">🎧</button>

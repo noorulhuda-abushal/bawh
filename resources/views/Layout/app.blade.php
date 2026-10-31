@@ -110,6 +110,57 @@
         </div>
     </div>
 
+    {{-- 🧭 The floating dock at the bottom (not on the Log In / Sign Up pages) --}}
+    @unless (in_array($page ?? '', ['Log In', 'Sign Up']))
+        <x-bottom-dock :page="$page ?? ''" />
+    @endunless
+
+    {{-- 💬 Contact support: a floating button + a box to send a note about the website --}}
+    <button type="button" popovertarget="feedback-panel" class="feedback-btn" aria-label="{{ __('Contact support') }}" title="{{ __('Contact support') }}">💬</button>
+
+    <div id="feedback-panel" popover class="panel" @if ($errors->feedback->any()) data-open @endif>
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold">💬 {{ __('Contact support') }}</h2>
+            <button type="button" popovertarget="feedback-panel" popovertargetaction="hide"
+                aria-label="{{ __('Close') }}" class="close-btn">✕</button>
+        </div>
+        <p class="mb-4 text-sm opacity-80">{{ __('Tell us what you think of Bawh: an idea, a problem, or kind words. We read every note to make Bawh better.') }}</p>
+
+        <form method="POST" action="{{ route('feedback') }}" class="space-y-4">
+            @csrf
+            {{-- What kind of note? --}}
+            <fieldset>
+                <legend class="mb-2 font-bold">{{ __('Your note is:') }}</legend>
+                <div class="flex flex-wrap gap-2">
+                    @foreach (\App\Models\Feedback::TYPES as $key => $type)
+                        <label class="mood-option" style="--mood: #f2a54a">
+                            <input type="radio" name="type" value="{{ $key }}" class="sr-only" @checked(old('type', 'idea') === $key)>
+                            <span>{{ $type['emoji'] }} {{ __($type['name']) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+
+            <div>
+                <textarea name="message" rows="5" required minlength="5" maxlength="1000" data-count class="input resize-none"
+                    placeholder="{{ __('Write your note…') }}" aria-label="{{ __('Your note') }}">{{ old('message') }}</textarea>
+                <p class="char-count text-end text-xs opacity-60">0 / 1000</p>
+                @error('message', 'feedback') <p class="text-sm text-red-400">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Guests can leave an email so we can reply (users already have one) --}}
+            @guest
+                <div>
+                    <input type="email" name="email" maxlength="150" class="input" value="{{ old('email') }}"
+                        placeholder="{{ __('Your email (optional, if you want a reply)') }}" aria-label="{{ __('Email') }}">
+                    @error('email', 'feedback') <p class="text-sm text-red-400">{{ $message }}</p> @enderror
+                </div>
+            @endguest
+
+            <button type="submit" class="btn-primary w-full">{{ __('Send') }} 💌</button>
+        </form>
+    </div>
+
     {{-- ⬆️ Back to top (shows after scrolling down) --}}
     <button type="button" id="to-top" class="to-top" aria-label="{{ __('Back to top') }}" hidden>↑</button>
 
@@ -161,6 +212,7 @@
         {{-- 🧭 Watch the welcome tour again (it opens on the home page) --}}
         <p class="setting-title">{{ __('Help') }}</p>
         <a href="{{ route('home', ['tour' => 1]) }}" id="start-tour" class="setting-option is-tour block text-center">🧭 {{ __('Welcome tour') }}</a>
+        <button type="button" popovertarget="feedback-panel" class="setting-option is-tour mt-2 block w-full text-center">💬 {{ __('Contact support') }}</button>
 
         <button type="button" id="reset-settings" class="mt-6 w-full text-sm opacity-60 hover:underline">
             {{ __('Reset to default') }}

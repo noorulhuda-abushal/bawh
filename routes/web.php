@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\AnswerController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\LibraryController;
@@ -45,6 +46,9 @@ Route::get('/library', [LibraryController::class, 'index'])->name('library');
 Route::get('/library/{book}', [LibraryController::class, 'show'])->name('book');
 // ✨ The AI suggests a book from the library for your feeling
 Route::post('/library/suggest', [LibraryController::class, 'suggest'])->name('library_suggest');
+
+// 💬 Contact support: anyone can send a note about the website (max 5 a minute, against spam)
+Route::post('/feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,1')->name('feedback');
 
 // 👤 Profile page of any user: /users/5
 Route::get('/users/{user}', [UserController::class, 'show'])->name('profile');
@@ -102,4 +106,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{user}/role', [AdminController::class, 'toggleAdmin'])->name('admin_toggle_role');
     Route::delete('/reports/{type}/{id}', [AdminController::class, 'dismissReports'])->whereNumber('id')->name('admin_dismiss_reports');
     Route::delete('/library/{book}', [LibraryController::class, 'destroy'])->name('delete_book');
+    // 💬 Visitors' notes: mark as done / delete
+    Route::post('/feedback/{feedback}/done', [FeedbackController::class, 'toggleDone'])->name('admin_feedback_done');
+    Route::delete('/feedback/{feedback}', [FeedbackController::class, 'destroy'])->name('admin_delete_feedback');
 });

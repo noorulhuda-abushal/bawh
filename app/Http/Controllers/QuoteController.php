@@ -59,7 +59,7 @@ class QuoteController extends Controller
         $aiEnabled = Ai::enabled();
 
         // 🌙 The question of the day and its answers (newest first)
-        $question = __(Questions::today());
+        $question = Questions::text();
         $answers = Answer::whereDate('question_date', now()->toDateString())->latest()->take(9)->get();
 
         // 📚 "Quote from this book": the share box opens with this book already written

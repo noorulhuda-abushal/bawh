@@ -8,7 +8,8 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * 🌱 Fills Bawh with demo accounts, quotes, reactions, follows, letters and answers,
+ * 🌱 Fills Bawh with demo accounts, quotes, reactions, follows, letters and books
+ * (no answers: the question of the day is new every day, so people answer it themselves),
  * so the site looks alive for the demo video.
  *
  * Run it with:  php artisan db:seed --class=BawhDemoSeeder
@@ -81,15 +82,6 @@ class BawhDemoSeeder extends Seeder
         ['loved', 'شكراً إنك بقيت، حتى لما كنت صعبة.'],
         ['letdown', 'ما زعلت إنك رحت، زعلت إني صدقتك.'],
         ['old_self', 'كنتِ خايفة من أشياء ما صارت أبداً. ارتاحي.'],
-    ];
-
-    // 🌙 Answers to today's question
-    private const ANSWERS = [
-        'إني كافية مثل ما أنا.',
-        'ليتني قلت لأبوي إني أحبه كل يوم.',
-        'كلمة «فخورين فيك».',
-        'إن الأشياء الحلوة جاية.',
-        'إني ما كنت غلطانة.',
     ];
 
     // 📚 Real quotes from old (public domain) books: [quote, feeling, book title, author]
@@ -167,14 +159,6 @@ class BawhDemoSeeder extends Seeder
                 'recipient' => $recipient,
                 'content' => $text,
                 'is_public' => true,
-            ]);
-        }
-
-        // 🌙 Answers to today's question
-        foreach (self::ANSWERS as $i => $text) {
-            $users[($i * 3 + 1) % $users->count()]->answers()->create([
-                'question_date' => now()->toDateString(),
-                'content' => $text,
             ]);
         }
 

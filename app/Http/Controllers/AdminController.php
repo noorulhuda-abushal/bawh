@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Feedback;
 use App\Models\Letter;
 use App\Models\Quote;
 use App\Models\Reaction;
@@ -23,6 +24,7 @@ class AdminController extends Controller
             'letters' => Letter::where('is_public', true)->count(),
             'reactions' => Reaction::count(),
             'anonymous' => Quote::where('is_anonymous', true)->count(),
+            'feedback' => Feedback::where('is_done', false)->count(),
         ];
 
         // 💔 How many quotes for each feeling (for the bars)
@@ -40,7 +42,10 @@ class AdminController extends Controller
             ->sortByDesc('count')
             ->values();
 
-        return view('admin', ['page' => 'Admin'] + compact('stats', 'feelings', 'users', 'quotes', 'letters', 'reports'));
+        // 💬 Notes from visitors: new ones first, then the done ones
+        $feedback = Feedback::with('user')->orderBy('is_done')->latest()->get();
+
+        return view('admin', ['page' => 'Admin'] + compact('stats', 'feelings', 'users', 'quotes', 'letters', 'reports', 'feedback'));
     }
 
     /**
